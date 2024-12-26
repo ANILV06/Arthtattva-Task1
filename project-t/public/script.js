@@ -5,8 +5,7 @@ const addMappingBtn = document.getElementById("addMappingBtn");
 const searchBar = document.getElementById("searchBar");
 const searchBtn = document.getElementById("searchBtn");
 const mappingsList = document.getElementById("mappingsList");
-const autoMatchResult = document.getElementById("autoMatchResult");
-const resultImage = document.getElementById("resultImage");
+const autoMatchList = document.getElementById("autoMatchList");
 
 // Fetch mappings from the backend
 async function fetchMappings() {
@@ -46,12 +45,12 @@ async function addMapping() {
       body: JSON.stringify({ supplierName, standardName }),
     });
 
+    const data = await response.json();
     if (response.ok) {
       supplierNameInput.value = "";
       standardNameInput.value = "";
-      fetchMappings();
+      fetchMappings(); // Refresh the mappings after adding
     } else {
-      const data = await response.json();
       alert(`Error: ${data.error}`);
     }
   } catch (error) {
@@ -75,14 +74,15 @@ async function searchMappings() {
 
 // Render auto-matching results
 function renderAutoMatches(matches) {
+  autoMatchList.innerHTML = "";
   if (matches.length === 0) {
-    autoMatchResult.querySelector("p").textContent = "No matches found.";
-    resultImage.style.display = "none";
+    autoMatchList.innerHTML = "<li>No matches found.</li>";
   } else {
-    const firstMatch = matches[0];
-    autoMatchResult.querySelector("p").textContent = `${firstMatch.supplierName} → ${firstMatch.standardName}`;
-    resultImage.src = `/images/${firstMatch.standardName.replace(/\s+/g, "-").toLowerCase()}.jpg`;
-    resultImage.style.display = "block";
+    matches.forEach((match) => {
+      const li = document.createElement("li");
+      li.textContent = `${match.supplierName} → ${match.standardName}`;
+      autoMatchList.appendChild(li);
+    });
   }
 }
 
@@ -92,4 +92,3 @@ searchBtn.addEventListener("click", searchMappings);
 
 // Initial fetch of mappings
 fetchMappings();
-
