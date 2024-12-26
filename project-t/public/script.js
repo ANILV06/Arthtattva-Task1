@@ -81,7 +81,7 @@ function renderAutoMatches(matches) {
   } else {
     const firstMatch = matches[0];
     autoMatchResult.querySelector("p").textContent = `${firstMatch.supplierName} → ${firstMatch.standardName}`;
-    resultImage.src = './public/images/a4-paper.jpg';
+    resultImage.src = `/images/${firstMatch.standardName.replace(/\s+/g, "-").toLowerCase()}.jpg`;
     resultImage.style.display = "block";
   }
 }
