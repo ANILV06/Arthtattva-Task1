@@ -1,50 +1,80 @@
-const express = require('express');
-const cors = require('cors'); // Import cors
+const express = require("express");
+const mongoose = require("mongoose");
+const cors = require("cors");
 
+// Initialize the app
 const app = express();
-const port = 3000;
+const PORT = 3000;
 
-// Enable CORS for all routes
+// Middleware
 app.use(cors());
-
-// Use JSON middleware to parse request bodies
 app.use(express.json());
 
-// In-memory store for mappings (for demonstration)
-let mappings = {};
+// MongoDB Connection
+const mongoURI = "mongodb://127.0.0.1:27017/productMappingDB";
+mongoose
+  .connect(mongoURI, { useNewUrlParser: true, useUnifiedTopology: true })
+  .then(() => console.log("Connected to MongoDB"))
+  .catch((err) => console.error("Failed to connect to MongoDB:", err));
 
-// API route for fetching mappings
-app.get('/mappings', (req, res) => {
-  res.json(mappings);
+// Define the Schema
+const mappingSchema = new mongoose.Schema({
+  supplierName: { type: String, required: true },
+  standardName: { type: String, required: true },
 });
 
-// API route for adding new mappings
-app.post('/mappings', (req, res) => {
+// Create a Model
+const Mapping = mongoose.model("Mapping", mappingSchema);
+
+// API Endpoints
+
+// Get all mappings
+app.get("/mappings", async (req, res) => {
+  try {
+    const mappings = await Mapping.find();
+    res.json(mappings);
+  } catch (error) {
+    res.status(500).json({ error: "Failed to fetch mappings" });
+  }
+});
+
+// Add a new mapping
+app.post("/mappings", async (req, res) => {
   const { supplierName, standardName } = req.body;
+
   if (!supplierName || !standardName) {
-    return res.status(400).json({ error: 'Both fields are required!' });
+    return res.status(400).json({ error: "Both fields are required" });
   }
-  mappings[supplierName] = standardName;
-  res.json({ message: 'Mapping added successfully!' });
+
+  try {
+    const newMapping = new Mapping({ supplierName, standardName });
+    await newMapping.save();
+    res.json({ message: "Mapping added successfully" });
+  } catch (error) {
+    res.status(500).json({ error: "Failed to add mapping" });
+  }
 });
 
-// API route for auto-matching based on search query
-app.get('/auto-match', (req, res) => {
-  const query = req.query.q?.toLowerCase();
-  const results = [];
-  
-  if (query) {
-    for (let [key, value] of Object.entries(mappings)) {
-      if (key.toLowerCase().includes(query)) {
-        results.push({ supplierName: key, standardName: value });
-      }
-    }
+// Search for a mapping
+app.get("/auto-match", async (req, res) => {
+  const query = req.query.q;
+
+  if (!query) {
+    return res.status(400).json({ error: "Query parameter is required" });
   }
 
-  res.json(results);
+  try {
+    const matches = await Mapping.find({
+      supplierName: new RegExp(query, "i"), // Case-insensitive search
+    });
+    res.json(matches);
+  } catch (error) {
+    res.status(500).json({ error: "Failed to search mappings" });
+  }
 });
 
 // Start the server
-app.listen(port, () => {
-  console.log(`Server is running on http://localhost:${port}`);
+app.listen(PORT, () => {
+  console.log(`Server is running on http://localhost:${PORT}`);
 });
+  

@@ -7,6 +7,7 @@ const searchBtn = document.getElementById("searchBtn");
 const mappingsList = document.getElementById("mappingsList");
 const autoMatchList = document.getElementById("autoMatchList");
 
+
 // Fetch mappings from the backend
 async function fetchMappings() {
   try {
@@ -21,9 +22,9 @@ async function fetchMappings() {
 // Render mappings on the UI
 function renderMappings(mappings) {
   mappingsList.innerHTML = "";
-  Object.entries(mappings).forEach(([key, value]) => {
+  mappings.forEach(({ supplierName, standardName }) => {
     const li = document.createElement("li");
-    li.textContent = `${key} → ${value}`;
+    li.textContent = `${supplierName} → ${standardName}`;
     mappingsList.appendChild(li);
   });
 }
@@ -78,9 +79,9 @@ function renderAutoMatches(matches) {
   if (matches.length === 0) {
     autoMatchList.innerHTML = "<li>No matches found.</li>";
   } else {
-    matches.forEach((match) => {
+    matches.forEach(({ supplierName, standardName }) => {
       const li = document.createElement("li");
-      li.textContent = `${match.supplierName} → ${match.standardName}`;
+      li.textContent = `${supplierName} → ${standardName}`;
       autoMatchList.appendChild(li);
     });
   }
